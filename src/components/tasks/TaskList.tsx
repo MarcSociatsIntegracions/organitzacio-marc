@@ -108,7 +108,7 @@ export default function TaskList() {
                 <h1 className="text-3xl font-bold">Tasques</h1>
                 <Dialog open={isFormOpen} onOpenChange={(open) => { setIsFormOpen(open); if (!open) setEditingTask(null); }}>
                     <DialogTrigger asChild>
-                        <Button size="sm"><Plus className="w-4 h-4 mr-2" /> Nova</Button>
+                        <Button size="sm" className="shadow-sm"><Plus className="w-4 h-4 mr-2" /> Nova</Button>
                     </DialogTrigger>
                     <DialogContent className="sm:max-w-xl">
                         <DialogHeader><DialogTitle>{editingTask ? 'Editar Tasca' : 'Nova Tasca'}</DialogTitle></DialogHeader>
