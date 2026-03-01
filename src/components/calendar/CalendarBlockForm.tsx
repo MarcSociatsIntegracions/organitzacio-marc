@@ -60,10 +60,10 @@ export default function CalendarBlockForm({ onSuccess, initialDate }: CalendarBl
                     user_id: user.id,
                     title,
                     category_id: categoryId || null,
-                    override_date: specificDate,
+                    date: specificDate,
                     start_time: startTime,
                     end_time: endTime,
-                    action: 'add'
+                    type: 'add'
                 })
                 if (error) throw error
             }

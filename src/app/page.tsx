@@ -27,9 +27,12 @@ export default function LandingPage() {
           </Link>
         </div>
 
-        <div className="pt-8 border-t">
+        <div className="pt-8 border-t space-y-2">
           <p className="text-xs text-muted-foreground italic">
             "Simplificant el dia a dia."
+          </p>
+          <p className="text-[10px] text-muted-foreground/50">
+            Build: {new Date().toLocaleTimeString('ca-ES')}
           </p>
         </div>
       </div>

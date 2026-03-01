@@ -26,8 +26,8 @@ export function getBaseEventsForDate(
     let events: CalendarEvent[] = templates
         .filter(t => t.day_of_week === dayOfWeek)
         .map(t => {
-            const start = parse(t.start_time, 'HH:mm:ss', date)
-            const end = parse(t.end_time, 'HH:mm:ss', date)
+            const start = parse(t.start_time.length === 5 ? t.start_time : t.start_time.substring(0, 5), 'HH:mm', date)
+            const end = parse(t.end_time.length === 5 ? t.end_time : t.end_time.substring(0, 5), 'HH:mm', date)
             return {
                 id: `template-${t.id}-${dateStr}`,
                 template_id: t.id,
@@ -51,9 +51,9 @@ export function getBaseEventsForDate(
                 events[index] = {
                     ...events[index],
                     title: o.title || events[index].title,
-                    start: parse(o.start_time, 'HH:mm:ss', date),
-                    end: parse(o.end_time, 'HH:mm:ss', date),
                     category_id: o.category_id || events[index].category_id,
+                    start: parse(o.start_time!.length === 5 ? o.start_time! : o.start_time!.substring(0, 5), 'HH:mm', date),
+                    end: parse(o.end_time!.length === 5 ? o.end_time! : o.end_time!.substring(0, 5), 'HH:mm', date),
                     type: 'override',
                 }
             }
@@ -61,8 +61,8 @@ export function getBaseEventsForDate(
             events.push({
                 id: `override-${o.id}`,
                 title: o.title || 'Esdeveniment',
-                start: parse(o.start_time, 'HH:mm:ss', date),
-                end: parse(o.end_time, 'HH:mm:ss', date),
+                start: parse(o.start_time!.length === 5 ? o.start_time! : o.start_time!.substring(0, 5), 'HH:mm', date),
+                end: parse(o.end_time!.length === 5 ? o.end_time! : o.end_time!.substring(0, 5), 'HH:mm', date),
                 type: 'override',
                 category_id: o.category_id,
             })

@@ -17,9 +17,13 @@ export default async function DashboardPage() {
 
     return (
         <div className="space-y-8">
-            <div>
-                <h1 className="text-3xl font-bold">Benvingut, {user?.user_metadata?.full_name || 'Usuari'}</h1>
-                <p className="text-muted-foreground text-lg">Això és el que tens per avui.</p>
+            <div className="flex justify-between items-start">
+                <div>
+                    <h1 className="text-3xl font-bold">Hola! 👋</h1>
+                    <p className="text-muted-foreground mt-1 text-sm italic">
+                        Última actualització: {new Date().toLocaleTimeString('ca-ES')}
+                    </p>
+                </div>
             </div>
 
             <Timer />

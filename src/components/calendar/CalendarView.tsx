@@ -126,6 +126,7 @@ export default function CalendarView() {
                                             key={event.id}
                                             className={cn("absolute left-0.5 right-0.5 rounded p-1 text-[9px] text-white shadow-sm overflow-hidden cursor-pointer hover:brightness-110 transition-all z-10 border border-black/10")}
                                             style={getEventStyle(event)}
+                                            onClick={() => console.log('Event clicat:', event)}
                                         >
                                             <p className="font-bold truncate">{event.title}</p>
                                         </div>
