@@ -102,39 +102,37 @@ export default function CalendarView() {
         const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i))
 
         return (
-            <div className="flex-1 overflow-auto">
-                <div className="flex min-w-[600px] h-[1000px] relative">
-                    <div className="w-12 border-r sticky left-0 bg-background z-10 py-1">
-                        {hours.map(hour => (
-                            <div key={hour} className="h-[40px] text-[10px] text-muted-foreground flex items-center justify-center -translate-y-[20px]">
-                                {hour}:00
-                            </div>
-                        ))}
-                    </div>
-                    <div className="flex flex-1">
-                        {weekDays.map((day, i) => {
-                            const isToday = isTodayFn(day)
-                            const events = getBaseEventsForDate(day, templates, overrides, taskSchedules)
-                            return (
-                                <div key={i} className={cn("flex-1 border-r last:border-r-0 relative", isToday && "bg-primary/5")}>
-                                    <div className={cn("sticky top-0 bg-background/95 backdrop-blur-sm z-20 border-b p-1 text-center font-bold text-xs", isToday && "text-primary bg-primary/10")}>
-                                        {format(day, 'EEE d', { locale: ca })}
-                                    </div>
-                                    {hours.map(hour => <div key={hour} className="h-[40px] border-b border-muted/30 last:border-0" />)}
-                                    {events.map((event) => (
-                                        <div
-                                            key={event.id}
-                                            className={cn("absolute left-0.5 right-0.5 rounded p-1 text-[9px] text-white shadow-sm overflow-hidden cursor-pointer hover:brightness-110 transition-all z-10 border border-black/10")}
-                                            style={getEventStyle(event)}
-                                            onClick={() => console.log('Event clicat:', event)}
-                                        >
-                                            <p className="font-bold truncate">{event.title}</p>
-                                        </div>
-                                    ))}
+            <div className="flex min-w-[800px] relative">
+                <div className="w-12 border-r sticky left-0 bg-background z-10 py-1">
+                    {hours.map(hour => (
+                        <div key={hour} className="h-[40px] text-[10px] text-muted-foreground flex items-center justify-center -translate-y-[20px]">
+                            {hour}:00
+                        </div>
+                    ))}
+                </div>
+                <div className="flex flex-1">
+                    {weekDays.map((day, i) => {
+                        const isToday = isTodayFn(day)
+                        const events = getBaseEventsForDate(day, templates, overrides, taskSchedules)
+                        return (
+                            <div key={i} className={cn("flex-1 border-r last:border-r-0 relative min-h-[960px]", isToday && "bg-primary/5")}>
+                                <div className={cn("sticky top-0 bg-background/95 backdrop-blur-sm z-20 border-b p-1 text-center font-bold text-xs", isToday && "text-primary bg-primary/10")}>
+                                    {format(day, 'EEE d', { locale: ca })}
                                 </div>
-                            )
-                        })}
-                    </div>
+                                {hours.map(hour => <div key={hour} className="h-[40px] border-b border-muted/30 last:border-0" />)}
+                                {events.map((event) => (
+                                    <div
+                                        key={event.id}
+                                        className={cn("absolute left-0.5 right-0.5 rounded p-1 text-[9px] text-white shadow-sm overflow-hidden cursor-pointer hover:brightness-110 transition-all z-10 border border-black/10")}
+                                        style={getEventStyle(event)}
+                                        onClick={() => console.log('Event clicat:', event)}
+                                    >
+                                        <p className="font-bold truncate">{event.title}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        )
+                    })}
                 </div>
             </div>
         )
@@ -143,32 +141,30 @@ export default function CalendarView() {
     const renderDayView = () => {
         const events = getBaseEventsForDate(currentDate, templates, overrides, taskSchedules)
         return (
-            <div className="flex-1 overflow-auto p-4">
-                <div className="max-w-xl mx-auto h-[1000px] relative bg-white border rounded-xl shadow-sm">
-                    <div className="flex h-full">
-                        <div className="w-16 border-r sticky left-0 bg-background py-1">
-                            {hours.map(hour => (
-                                <div key={hour} className="h-[40px] text-[10px] text-muted-foreground flex items-center justify-center -translate-y-[20px]">
-                                    {hour}:00
-                                </div>
-                            ))}
-                        </div>
-                        <div className="flex-1 relative">
-                            {hours.map(hour => <div key={hour} className="h-[40px] border-b border-muted/30 last:border-0" />)}
-                            {events.map((event) => (
-                                <div
-                                    key={event.id}
-                                    className="absolute left-1 right-2 rounded-lg p-3 text-sm text-white shadow-md overflow-hidden cursor-pointer hover:scale-[1.01] transition-all z-10 border border-black/10"
-                                    style={getEventStyle(event)}
-                                >
-                                    <p className="font-bold flex items-center gap-2">
-                                        {event.title}
-                                        {event.type === 'task' && <Badge variant="secondary" className="bg-white/20 text-white border-none text-[10px]">Tasca</Badge>}
-                                    </p>
-                                    <p className="text-xs opacity-90">{format(event.start, 'HH:mm')} - {format(event.end, 'HH:mm')}</p>
-                                </div>
-                            ))}
-                        </div>
+            <div className="p-4 overflow-x-auto">
+                <div className="max-w-xl mx-auto min-h-[960px] relative bg-white border rounded-xl shadow-sm flex overflow-hidden">
+                    <div className="w-16 border-r sticky left-0 bg-background py-1 z-10">
+                        {hours.map(hour => (
+                            <div key={hour} className="h-[40px] text-[10px] text-muted-foreground flex items-center justify-center -translate-y-[20px]">
+                                {hour}:00
+                            </div>
+                        ))}
+                    </div>
+                    <div className="flex-1 relative">
+                        {hours.map(hour => <div key={hour} className="h-[40px] border-b border-muted/30 last:border-0" />)}
+                        {events.map((event) => (
+                            <div
+                                key={event.id}
+                                className="absolute left-1 right-2 rounded-lg p-3 text-sm text-white shadow-md overflow-hidden cursor-pointer hover:scale-[1.01] transition-all z-10 border border-black/10"
+                                style={getEventStyle(event)}
+                            >
+                                <p className="font-bold flex items-center gap-2">
+                                    {event.title}
+                                    {event.type === 'task' && <Badge variant="secondary" className="bg-white/20 text-white border-none text-[10px]">Tasca</Badge>}
+                                </p>
+                                <p className="text-xs opacity-90">{format(event.start, 'HH:mm')} - {format(event.end, 'HH:mm')}</p>
+                            </div>
+                        ))}
                     </div>
                 </div>
             </div>
@@ -216,15 +212,15 @@ export default function CalendarView() {
     }
 
     return (
-        <div className="flex flex-col h-[calc(100vh-140px)] bg-background rounded-xl border shadow-sm overflow-hidden">
-            <div className="flex flex-col md:flex-row items-center justify-between p-3 border-b gap-4">
+        <div className="flex flex-col h-[calc(100vh-100px)] lg:h-[calc(100vh-64px)] bg-background rounded-xl border shadow-sm overflow-hidden">
+            <div className="flex flex-col md:flex-row items-center justify-between p-3 border-b gap-4 bg-background z-30">
                 <div className="flex items-center gap-3">
                     <div className="flex items-center border rounded-lg p-0.5 bg-muted/50">
                         <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => navigate('prev')}><ChevronLeft className="w-4 h-4" /></Button>
                         <Button variant="ghost" size="sm" className="h-7 text-xs font-bold" onClick={() => setCurrentDate(new Date())}>Avui</Button>
                         <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => navigate('next')}><ChevronRight className="w-4 h-4" /></Button>
                     </div>
-                    <h2 className="text-lg font-bold capitalize w-40">
+                    <h2 className="text-lg font-bold capitalize w-40 truncate">
                         {format(currentDate, viewMode === 'month' ? 'MMMM yyyy' : 'd MMM yyyy', { locale: ca })}
                     </h2>
                 </div>
@@ -252,7 +248,7 @@ export default function CalendarView() {
                 </div>
             </div>
 
-            <div className="flex-1 relative overflow-hidden bg-slate-50/30">
+            <div className="flex-1 relative overflow-auto bg-slate-50/30 custom-scrollbar">
                 {viewMode === 'week' && renderWeekView()}
                 {viewMode === 'day' && renderDayView()}
                 {viewMode === 'month' && renderMonthView()}
