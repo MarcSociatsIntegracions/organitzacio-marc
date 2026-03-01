@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner'
 import { format } from 'date-fns'
 import { Trash2 } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 interface CalendarBlockFormProps {
     onSuccess: () => void
@@ -34,12 +35,40 @@ export default function CalendarBlockForm({ onSuccess, initialDate, editData }: 
     const [title, setTitle] = useState(editData?.title || '')
     const [categoryId, setCategoryId] = useState(editData?.category_id || '')
     const [type, setType] = useState<'template' | 'override'>(editData?.type || 'template')
-    const [dayOfWeek, setDayOfWeek] = useState(editData?.day_of_week?.toString() || '1')
+    const [selectedDays, setSelectedDays] = useState<string[]>(editData?.day_of_week !== undefined ? [editData.day_of_week.toString()] : [])
     const [specificDate, setSpecificDate] = useState(editData?.date || (initialDate ? format(initialDate, 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd')))
     const [startTime, setStartTime] = useState(editData?.start_time?.substring(0, 5) || '09:00')
     const [endTime, setEndTime] = useState(editData?.end_time?.substring(0, 5) || '10:00')
 
+    const days = [
+        { label: 'dl', value: '1' },
+        { label: 'dt', value: '2' },
+        { label: 'dm', value: '3' },
+        { label: 'dj', value: '4' },
+        { label: 'dv', value: '5' },
+        { label: 'ds', value: '6' },
+        { label: 'dg', value: '0' },
+    ]
+
+    const toggleDay = (day: string) => {
+        if (editData) {
+            setSelectedDays([day]) // If editing, only one day allowed (to avoid confusion with existing ID)
+        } else {
+            setSelectedDays(prev =>
+                prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]
+            )
+        }
+    }
+
     const supabase = createClient()
+
+    useEffect(() => {
+        // Auto-select initial day if creation mode and initialDate exists
+        if (!editData && initialDate && selectedDays.length === 0) {
+            const dayNum = initialDate.getDay()
+            setSelectedDays([dayNum.toString()])
+        }
+    }, [initialDate, editData])
 
     useEffect(() => {
         async function fetchCategories() {
@@ -51,6 +80,10 @@ export default function CalendarBlockForm({ onSuccess, initialDate, editData }: 
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
+        if (type === 'template' && selectedDays.length === 0) {
+            toast.error("Selecciona almenys un dia")
+            return
+        }
         setLoading(true)
 
         try {
@@ -69,7 +102,7 @@ export default function CalendarBlockForm({ onSuccess, initialDate, editData }: 
                 if (editData.type === 'template') {
                     const { error } = await supabase.from('templates').update({
                         ...payload,
-                        day_of_week: parseInt(dayOfWeek)
+                        day_of_week: parseInt(selectedDays[0])
                     }).eq('id', editData.id)
                     if (error) throw error
                 } else {
@@ -82,10 +115,12 @@ export default function CalendarBlockForm({ onSuccess, initialDate, editData }: 
                 toast.success("Bloc actualitzat")
             } else {
                 if (type === 'template') {
-                    const { error } = await supabase.from('templates').insert({
+                    // Create multiple records, one for each day
+                    const inserts = selectedDays.map(day => ({
                         ...payload,
-                        day_of_week: parseInt(dayOfWeek)
-                    })
+                        day_of_week: parseInt(day)
+                    }))
+                    const { error } = await supabase.from('templates').insert(inserts)
                     if (error) throw error
                 } else {
                     const { error } = await supabase.from('overrides').insert({
@@ -95,7 +130,7 @@ export default function CalendarBlockForm({ onSuccess, initialDate, editData }: 
                     })
                     if (error) throw error
                 }
-                toast.success("Bloc afegit")
+                toast.success(type === 'template' && selectedDays.length > 1 ? "Blocs afegits" : "Bloc afegit")
             }
 
             onSuccess()
@@ -108,7 +143,7 @@ export default function CalendarBlockForm({ onSuccess, initialDate, editData }: 
 
     const handleDelete = async () => {
         if (!editData) return
-        if (!confirm("Segur que vols eliminar aquest bloc?")) return
+        if (!confirm("Segur que vols eliminar aquest bloc? Segur?")) return
         setDeleting(true)
         try {
             const table = editData.type === 'template' ? 'templates' : 'overrides'
@@ -165,21 +200,23 @@ export default function CalendarBlockForm({ onSuccess, initialDate, editData }: 
 
             {type === 'template' ? (
                 <div className="space-y-2">
-                    <Label>Dia de la setmana</Label>
-                    <Select value={dayOfWeek} onValueChange={setDayOfWeek}>
-                        <SelectTrigger>
-                            <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="1">Dilluns</SelectItem>
-                            <SelectItem value="2">Dimarts</SelectItem>
-                            <SelectItem value="3">Dimecres</SelectItem>
-                            <SelectItem value="4">Dijous</SelectItem>
-                            <SelectItem value="5">Divendres</SelectItem>
-                            <SelectItem value="6">Dissabte</SelectItem>
-                            <SelectItem value="0">Diumenge</SelectItem>
-                        </SelectContent>
-                    </Select>
+                    <Label>Dies de la setmana</Label>
+                    <div className="flex gap-1.5 flex-wrap">
+                        {days.map((day) => (
+                            <Button
+                                key={day.value}
+                                type="button"
+                                variant={selectedDays.includes(day.value) ? "default" : "outline"}
+                                className={cn(
+                                    "w-10 h-10 p-0 text-xs font-bold uppercase rounded-full",
+                                    selectedDays.includes(day.value) ? "bg-primary" : "text-muted-foreground"
+                                )}
+                                onClick={() => toggleDay(day.value)}
+                            >
+                                {day.label}
+                            </Button>
+                        ))}
+                    </div>
                 </div>
             ) : (
                 <div className="space-y-2">
