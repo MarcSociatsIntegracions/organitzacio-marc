@@ -85,10 +85,10 @@ export default function StatsPage() {
 
     return (
         <div className="space-y-8 pb-8">
-            <div>
+            <div className="flex items-center gap-3">
                 <h1 className="text-3xl font-bold">Estadístiques</h1>
-                <p className="text-muted-foreground">Resum de la teva activitat aquesta setmana.</p>
             </div>
+            <p className="text-muted-foreground">Resum de la teva activitat aquesta setmana.</p>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <Card className="min-h-[450px]">
