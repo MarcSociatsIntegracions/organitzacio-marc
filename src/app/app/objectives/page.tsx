@@ -19,6 +19,7 @@ import {
     DialogFooter
 } from '@/components/ui/dialog'
 import { Progress } from '@/components/ui/progress'
+import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 
 export default function ObjectivesPage() {
