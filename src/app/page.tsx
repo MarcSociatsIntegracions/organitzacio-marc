@@ -36,3 +36,4 @@ export default function LandingPage() {
     </div>
   )
 }
+// Verificació de build per al deploy a Vercel
