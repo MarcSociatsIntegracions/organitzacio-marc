@@ -9,23 +9,35 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { toast } from 'sonner'
 import { format } from 'date-fns'
+import { Trash2 } from 'lucide-react'
 
 interface CalendarBlockFormProps {
     onSuccess: () => void
     initialDate?: Date
+    editData?: {
+        id: string
+        type: 'template' | 'override'
+        title: string
+        category_id?: string | null
+        start_time: string
+        end_time: string
+        day_of_week?: number
+        date?: string
+    }
 }
 
-export default function CalendarBlockForm({ onSuccess, initialDate }: CalendarBlockFormProps) {
+export default function CalendarBlockForm({ onSuccess, initialDate, editData }: CalendarBlockFormProps) {
     const [categories, setCategories] = useState<Category[]>([])
     const [loading, setLoading] = useState(false)
+    const [deleting, setDeleting] = useState(false)
 
-    const [title, setTitle] = useState('')
-    const [categoryId, setCategoryId] = useState('')
-    const [type, setType] = useState<'template' | 'override'>('template')
-    const [dayOfWeek, setDayOfWeek] = useState('1')
-    const [specificDate, setSpecificDate] = useState(initialDate ? format(initialDate, 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd'))
-    const [startTime, setStartTime] = useState('09:00')
-    const [endTime, setEndTime] = useState('10:00')
+    const [title, setTitle] = useState(editData?.title || '')
+    const [categoryId, setCategoryId] = useState(editData?.category_id || '')
+    const [type, setType] = useState<'template' | 'override'>(editData?.type || 'template')
+    const [dayOfWeek, setDayOfWeek] = useState(editData?.day_of_week?.toString() || '1')
+    const [specificDate, setSpecificDate] = useState(editData?.date || (initialDate ? format(initialDate, 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd')))
+    const [startTime, setStartTime] = useState(editData?.start_time?.substring(0, 5) || '09:00')
+    const [endTime, setEndTime] = useState(editData?.end_time?.substring(0, 5) || '10:00')
 
     const supabase = createClient()
 
@@ -45,35 +57,69 @@ export default function CalendarBlockForm({ onSuccess, initialDate }: CalendarBl
             const { data: { user } } = await supabase.auth.getUser()
             if (!user) throw new Error("Usuari no trobat")
 
-            if (type === 'template') {
-                const { error } = await supabase.from('templates').insert({
-                    user_id: user.id,
-                    title,
-                    category_id: categoryId || null,
-                    day_of_week: parseInt(dayOfWeek),
-                    start_time: startTime,
-                    end_time: endTime
-                })
-                if (error) throw error
-            } else {
-                const { error } = await supabase.from('overrides').insert({
-                    user_id: user.id,
-                    title,
-                    category_id: categoryId || null,
-                    date: specificDate,
-                    start_time: startTime,
-                    end_time: endTime,
-                    type: 'add'
-                })
-                if (error) throw error
+            const payload: any = {
+                user_id: user.id,
+                title,
+                category_id: categoryId || null,
+                start_time: startTime,
+                end_time: endTime,
             }
 
-            toast.success("Bloc afegit correctament")
+            if (editData) {
+                if (editData.type === 'template') {
+                    const { error } = await supabase.from('templates').update({
+                        ...payload,
+                        day_of_week: parseInt(dayOfWeek)
+                    }).eq('id', editData.id)
+                    if (error) throw error
+                } else {
+                    const { error } = await supabase.from('overrides').update({
+                        ...payload,
+                        date: specificDate
+                    }).eq('id', editData.id)
+                    if (error) throw error
+                }
+                toast.success("Bloc actualitzat")
+            } else {
+                if (type === 'template') {
+                    const { error } = await supabase.from('templates').insert({
+                        ...payload,
+                        day_of_week: parseInt(dayOfWeek)
+                    })
+                    if (error) throw error
+                } else {
+                    const { error } = await supabase.from('overrides').insert({
+                        ...payload,
+                        date: specificDate,
+                        type: 'add'
+                    })
+                    if (error) throw error
+                }
+                toast.success("Bloc afegit")
+            }
+
             onSuccess()
         } catch (err: any) {
-            toast.error("Error al guardar el bloc")
+            toast.error("Error al guardar")
         } finally {
             setLoading(false)
+        }
+    }
+
+    const handleDelete = async () => {
+        if (!editData) return
+        if (!confirm("Segur que vols eliminar aquest bloc?")) return
+        setDeleting(true)
+        try {
+            const table = editData.type === 'template' ? 'templates' : 'overrides'
+            const { error } = await supabase.from(table).delete().eq('id', editData.id)
+            if (error) throw error
+            toast.success("Bloc eliminat")
+            onSuccess()
+        } catch (err) {
+            toast.error("Error al eliminar")
+        } finally {
+            setDeleting(false)
         }
     }
 
@@ -87,7 +133,7 @@ export default function CalendarBlockForm({ onSuccess, initialDate }: CalendarBl
             <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                     <Label>Tipus de bloc</Label>
-                    <Select value={type} onValueChange={(v: any) => setType(v)}>
+                    <Select value={type} onValueChange={(v: any) => setType(v)} disabled={!!editData}>
                         <SelectTrigger>
                             <SelectValue />
                         </SelectTrigger>
@@ -153,9 +199,16 @@ export default function CalendarBlockForm({ onSuccess, initialDate }: CalendarBl
                 </div>
             </div>
 
-            <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "Guardant..." : "Afegir Bloc"}
-            </Button>
+            <div className="flex gap-2">
+                {editData && (
+                    <Button type="button" variant="destructive" onClick={handleDelete} disabled={deleting || loading}>
+                        <Trash2 className="w-4 h-4" />
+                    </Button>
+                )}
+                <Button type="submit" className="flex-1" disabled={loading || deleting}>
+                    {loading ? "Guardant..." : editData ? "Actualitzar" : "Afegir Bloc"}
+                </Button>
+            </div>
         </form>
     )
 }

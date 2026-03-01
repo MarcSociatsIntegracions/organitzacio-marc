@@ -18,6 +18,7 @@ import {
     endOfMonth,
     eachDayOfInterval,
     endOfWeek as endOfWeekFn,
+    getDay,
 } from 'date-fns'
 import { ca } from 'date-fns/locale'
 import { createClient } from '@/lib/supabase/client'
@@ -48,6 +49,7 @@ export default function CalendarView() {
     const [categories, setCategories] = useState<Category[]>([])
     const [loading, setLoading] = useState(true)
     const [isFormOpen, setIsFormOpen] = useState(false)
+    const [editingBlock, setEditingBlock] = useState<any>(null)
 
     const supabase = createClient()
 
@@ -125,7 +127,7 @@ export default function CalendarView() {
                                         key={event.id}
                                         className={cn("absolute left-0.5 right-0.5 rounded p-1 text-[9px] text-white shadow-sm overflow-hidden cursor-pointer hover:brightness-110 transition-all z-10 border border-black/10")}
                                         style={getEventStyle(event)}
-                                        onClick={() => console.log('Event clicat:', event)}
+                                        onClick={() => handleEventClick(event)}
                                     >
                                         <p className="font-bold truncate">{event.title}</p>
                                     </div>
@@ -157,6 +159,7 @@ export default function CalendarView() {
                                 key={event.id}
                                 className="absolute left-1 right-2 rounded-lg p-3 text-sm text-white shadow-md overflow-hidden cursor-pointer hover:scale-[1.01] transition-all z-10 border border-black/10"
                                 style={getEventStyle(event)}
+                                onClick={() => handleEventClick(event)}
                             >
                                 <p className="font-bold flex items-center gap-2">
                                     {event.title}
@@ -211,6 +214,25 @@ export default function CalendarView() {
         )
     }
 
+    const handleEventClick = (event: CalendarEvent) => {
+        if (event.type === 'task') return
+
+        // Map template instance to its master id, or use the override id
+        const id = event.type === 'template' ? event.template_id : event.id.replace('override-', '')
+
+        setEditingBlock({
+            id: id || '',
+            type: event.type,
+            title: event.title,
+            category_id: event.category_id,
+            start_time: format(event.start, 'HH:mm'),
+            end_time: format(event.end, 'HH:mm'),
+            day_of_week: getDay(event.start),
+            date: format(event.start, 'yyyy-MM-dd')
+        })
+        setIsFormOpen(true)
+    }
+
     return (
         <div className="flex flex-col h-[calc(100vh-100px)] lg:h-[calc(100vh-64px)] bg-background rounded-xl border shadow-sm overflow-hidden">
             <div className="flex flex-col md:flex-row items-center justify-between p-3 border-b gap-4 bg-background z-30">
@@ -234,15 +256,24 @@ export default function CalendarView() {
                         </TabsList>
                     </Tabs>
 
-                    <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+                    <Dialog open={isFormOpen} onOpenChange={(open) => {
+                        setIsFormOpen(open)
+                        if (!open) setEditingBlock(null)
+                    }}>
                         <DialogTrigger asChild>
-                            <Button size="sm" className="bg-primary hover:bg-primary/90">
+                            <Button size="sm" className="bg-primary hover:bg-primary/90" onClick={() => setEditingBlock(null)}>
                                 <Plus className="w-4 h-4 mr-1.5" /> Nou bloc
                             </Button>
                         </DialogTrigger>
                         <DialogContent className="sm:max-w-md">
-                            <DialogHeader><DialogTitle>Crear bloc al calendari</DialogTitle></DialogHeader>
-                            <CalendarBlockForm onSuccess={() => { setIsFormOpen(false); fetchData(); }} initialDate={currentDate} />
+                            <DialogHeader>
+                                <DialogTitle>{editingBlock ? 'Editar bloc' : 'Crear bloc al calendari'}</DialogTitle>
+                            </DialogHeader>
+                            <CalendarBlockForm
+                                onSuccess={() => { setIsFormOpen(false); setEditingBlock(null); fetchData(); }}
+                                initialDate={currentDate}
+                                editData={editingBlock}
+                            />
                         </DialogContent>
                     </Dialog>
                 </div>
